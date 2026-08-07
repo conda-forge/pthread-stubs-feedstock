@@ -7,7 +7,7 @@
 
 package:
   name: {{ name|lower }}
-  version: {{ version }}
+  version: "{{ version }}"
 
 source:
   fn: {{ xorg_name }}-{{ version }}.tar.bz2
@@ -20,7 +20,7 @@ source:
 # downstream packages.
 
 build:
-  number: 1002
+  number: 1003
   detect_binary_files_with_prefix: true
 
 requirements:
