@@ -14,14 +14,15 @@ source:
   url: https://www.x.org/releases/individual/{{ xorg_category }}/{{ xorg_name }}-{{ version }}.tar.bz2
   sha256: {{ sha256 }}
 
-# NOTE: no Visual Studio dependent features, since this package does not build
-# or install any binary code on Windows. It needs m2w64-toolchain for the
-# configure script to run, but msys2 provides sufficient pthreads bits for
-# downstream packages.
+# NOTE: this package installs no machine code on Windows. Its configure checks
+# use a build-platform MinGW compiler only to determine the pkg-config flags.
 
 build:
   number: 1003
   detect_binary_files_with_prefix: true
+  ignore_run_exports_from:
+    - {{ m2w64_c_compiler }}_win-64  # [target_platform == "win-arm64"]
+    - {{ m2w64_c_stdlib }}_win-64    # [target_platform == "win-arm64"]
 
 requirements:
   build:
@@ -35,13 +36,23 @@ requirements:
     - m2-make                       # [win]
     - {{ compiler('c') }}           # [unix]
     - {{ stdlib("c") }}             # [unix]
-    - {{ compiler('m2w64_c') }}     # [win]
-    - {{ stdlib("m2w64_c") }}       # [win]
+    - {{ compiler('m2w64_c') }}     # [win and target_platform != "win-arm64"]
+    - {{ stdlib("m2w64_c") }}       # [win and target_platform != "win-arm64"]
+    # This package only uses the compiler for configure probes. Run those
+    # probes with GCC from the win-64 build platform when targeting win-arm64.
+    - {{ m2w64_c_compiler }}_win-64 {{ m2w64_c_compiler_version }}.*  # [target_platform == "win-arm64"]
+    - {{ m2w64_c_stdlib }}_win-64 {{ m2w64_c_stdlib_version }}.*      # [target_platform == "win-arm64"]
   host:
     - xorg-util-macros
 
 test:
   commands:
+    - test -f ${PREFIX}/lib/pkgconfig/pthread-stubs.pc  # [unix]
+    - 'grep -F "Version: {{ version }}" ${PREFIX}/lib/pkgconfig/pthread-stubs.pc'  # [unix]
+    - 'if not exist "%LIBRARY_PREFIX%\lib\pkgconfig\pthread-stubs.pc" exit /b 1'  # [win]
+    - 'findstr /C:"Version: {{ version }}" "%LIBRARY_PREFIX%\lib\pkgconfig\pthread-stubs.pc"'  # [win]
+    - 'findstr /C:"Cflags: -pthread" "%LIBRARY_PREFIX%\lib\pkgconfig\pthread-stubs.pc"'  # [win]
+    - 'findstr /C:"Libs: -pthread" "%LIBRARY_PREFIX%\lib\pkgconfig\pthread-stubs.pc"'  # [win]
 
 about:
   home: https://xcb.freedesktop.org/
