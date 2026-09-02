@@ -44,6 +44,17 @@ configure_args=(
 ./configure "${configure_args[@]}"
 make -j$CPU_COUNT
 make install
+
+# Cross-built packages do not execute conda-build's runtime test commands.
+# Check the installed metadata here while it is available in the host prefix.
+pc_file="$uprefix/lib/pkgconfig/pthread-stubs.pc"
+test -f "$pc_file"
+grep -F "Version: $PKG_VERSION" "$pc_file"
+if [ -n "$LIBRARY_PREFIX_M" ] ; then
+    grep -Fx "Cflags: -pthread" "$pc_file"
+    grep -Fx "Libs: -pthread" "$pc_file"
+fi
+
 if [[ "${CONDA_BUILD_CROSS_COMPILATION:-}" != "1" || "${CROSSCOMPILING_EMULATOR}" != "" ]]; then
 make check
 fi

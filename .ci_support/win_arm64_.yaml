@@ -11,4 +11,4 @@ m2w64_c_stdlib:
 m2w64_c_stdlib_version:
 - '12'
 target_platform:
-- win-64
+- win-arm64
