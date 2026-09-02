@@ -18,7 +18,7 @@ source:
 # use a build-platform MinGW compiler only to determine the pkg-config flags.
 
 build:
-  number: 1003
+  number: 1004
   detect_binary_files_with_prefix: true
   ignore_run_exports_from:
     - {{ m2w64_c_compiler }}_win-64  # [target_platform == "win-arm64"]
